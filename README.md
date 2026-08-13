@@ -29,11 +29,14 @@
 - in this project, i using ***NUCLEO-F411RE (STM32F411RET6)*** like a main microcontroller with target component is on-board User LED (LD2 connected to pin **PA5**)
 - Debugger: On-board ST-LINK/V2-1 via Mini-USB cable
 <img width="1525" height="1438" alt="anh2" src="https://github.com/user-attachments/assets/2037b971-55a4-498e-b9f7-07fb29b49d30" />
+
 ****
+
 ## Software using
 - IDE: STM32CubeIDE
 - Compiler Toolchain: Integrated GNU Arm Embedded Toolchain.
 ****
+
 ## Build project
 **1. Import Project into STM32CubeIDE**
 - Open STM32CubeIDE.
