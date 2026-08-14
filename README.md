@@ -37,6 +37,52 @@
 - Compiler Toolchain: Integrated GNU Arm Embedded Toolchain.
 ****
 
+## Hand-on Practice
+1. Identifying the Required Register Addresses
+firstly, we have to identify the required register address, it include: RCC, GPIOA_MODER and GPIOA_ODR
+a. RCC (Reset and Clock Control) – Enable the clock for GPIOA
+- let take a look at RCC base address: `0x40023800` and RCC_AHB1ENR offset: `0x30`
+- After that we take RCC base address plus offset to obtain actual address (memory-mapped I/O): 
+`0x40023800 + 0x30 = 0x40023830`
+- Stored in the pClock pointer variable.
+b. GPIOA_MODER – Configure the GPIO pin mode
+- GPIOA base address: `0x40020000`
+- PIOx_MODER offset: `0x00`
+→ actual address (memory-mapped I/O): `0x40020000`
+- Stored in the pMode pointer variable
+c. GPIOA_ODR (Output Data Register) – Control the output logic level
+GPIOA base address: `0x40020000`
+GPIOx_ODR offset: `0x14`
+→ actual address (memory-mapped I/O): `0x40020014`
+Stored in the pOutput_data pointer variable
+2. Hardware Configuration
+Enable the GPIOA clock: Set bit 0 (GPIOAEN) of RCC_AHB1ENR to 1.
+```*pClock |= 0x01;```
+- Without enabling the clock, subsequent read/write operations to the GPIOA registers will have no effect because the peripheral has not been supplied with a clock signal.
+- Configure PA5 as an output: Each GPIO pin occupies 2 bits in the MODER register. For GPIO pin n, the corresponding bits are 2n and 2n+1. Therefore, PA5 uses bits 10 and 11.
+- Clear bits 10–11 to 00 (reset state) before configuring the new mode.
+```
+*pMode &= ~(1<<10);
+*pMode &= ~(1<<11);
+```
+- This prevents the new configuration from being unintentionally combined with the previous register value.
+- Afterward, we set bit 10 to 1 and bit 11 to 0, resulting in 01 = General-purpose output mode.
+```
+*pMode |= (1<<10);
+```
+3. LED Blink Loop
+- and finally is the loop we using to turn on and off LED:
+```
+while (1) {
+    *pOutput_data |= (1 << 5);      // Set PA5 high (LED ON)
+    for (uint32_t i = 0; i < 600000; i++);  // Delay ~0.56 s
+
+    *pOutput_data &= ~(1 << 5);     // Set PA5 low (LED OFF)
+    for (uint32_t i = 0; i < 600000; i++);
+}
+```
+****
+
 ## Build project
 **1. Import Project into STM32CubeIDE**
 - Open STM32CubeIDE.
@@ -57,11 +103,15 @@ Insight:
 Looking closely at register addresses in the reference manual helps reveal how hardware interacts directly with software—an essential understanding that higher-level libraries often conceal.
 `
 ****
-## Knowledgeable gained
-Through building this bare-metal project from scratch, I have acquired key embedded systems engineering competencies:
-- **Register-Level Programming:** Navigated the STM32F411 Reference Manual (RM0383) to calculate peripheral base addresses, offset values, and manipulate bit fields for RCC (Reset and Clock Control) and GPIO registers.
-- **Cortex-M Boot Process & Startup Code:** Implemented a custom Vector Table and `Reset_Handler` in C to understand how the MCU transitions from power-on/reset to executing `main()`, including initializing `.data` sections in SRAM and clearing `.bss`.
-- **Linker Script Anatomy (`.ld`):** Learned how to map memory spaces (FLASH vs. SRAM), manage Load Memory Addresses (LMA) vs. Virtual Memory Addresses (VMA), and define stack alignment.
-- **Bitwise Operations:** Applied efficient bit-masking techniques (bit set, clear, toggle, read) in C for hardware manipulation.
-- **IDE & Build System Mechanics:** Configured STM32CubeIDE to build bare-metal projects without relying on CubeMX code generators or HAL driver abstractions.
+
+## Conclusion and Knowledge Gained
+- **Limitation:** The empty `for` loop delay is inaccurate (compiler-optimization dependent, may even get optimized away) and blocks the CPU from doing anything else while it runs. 
+- **Next step:** switch to SysTick/hardware timer for precise ms-level delays, then move to an interrupt-driven, non-blocking design — a natural bridge into FreeRTOS.
+**Skills gained:**
+- **Register-level programming** — used RM0383 to compute base addresses/offsets and configure RCC & GPIO bit fields directly.
+- **Boot process & startup code** — wrote a custom Vector Table and `Reset_Handler`, including `.data` initialization and `.bss` clearing.
+- **Linker scripts (`.ld`)** — mapped FLASH vs. SRAM, handled LMA/VMA, set stack alignment.
+- **Bitwise operations** — set/clear/toggle/read bits for hardware control.
+- **Build system** — configured STM32CubeIDE for bare-metal builds without CubeMX/HAL.
+Though simple, this project builds the register-level foundation needed before moving on to HAL or RTOS.
 ****
