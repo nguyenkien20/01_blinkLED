@@ -19,3 +19,4 @@
 #define GPIOA_ODR (*(volatile uint32_t *)(GPIOA_BASE + 0x14)) // GPIO BASE + offser ODR
 
 #endif /* STM32F411RETX_H_ */
+ 
