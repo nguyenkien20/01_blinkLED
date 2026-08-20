@@ -57,29 +57,28 @@ GPIOx_ODR offset: `0x14`
 Stored in the pOutput_data pointer variable
 2. Hardware Configuration
 Enable the GPIOA clock: Set bit 0 (GPIOAEN) of RCC_AHB1ENR to 1.
-```*pClock |= 0x01;```
+```RCC_AHB1ENR |= (1<<0);```
 - Without enabling the clock, subsequent read/write operations to the GPIOA registers will have no effect because the peripheral has not been supplied with a clock signal.
 - Configure PA5 as an output: Each GPIO pin occupies 2 bits in the MODER register. For GPIO pin n, the corresponding bits are 2n and 2n+1. Therefore, PA5 uses bits 10 and 11.
 - Clear bits 10–11 to 00 (reset state) before configuring the new mode.
 ```
-*pMode &= ~(1<<10);
-*pMode &= ~(1<<11);
+GPIOA_MODER &= ~(1<<10);
+GPIOA_MODER &= ~(1<<11);
 ```
 - This prevents the new configuration from being unintentionally combined with the previous register value.
 - Afterward, we set bit 10 to 1 and bit 11 to 0, resulting in 01 = General-purpose output mode.
 ```
-*pMode |= (1<<10);
+GPIOA_MODER |= (1<<10);
 ```
 3. LED Blink Loop
 - and finally is the loop we using to turn on and off LED:
 ```
-while (1) {
-    *pOutput_data |= (1 << 5);      // Set PA5 high (LED ON)
-    for (uint32_t i = 0; i < 600000; i++);  // Delay ~0.56 s
-
-    *pOutput_data &= ~(1 << 5);     // Set PA5 low (LED OFF)
-    for (uint32_t i = 0; i < 600000; i++);
-}
+while(1){
+GPIOA_ODR |= (1<<5); // turn on led
+for(uint32_t i = 0; i < 600000; i++);
+GPIOA_ODR &= ~(1<<5); // turn off led
+for(uint32_t i = 0; i < 600000; i++);
+	}
 ```
 ****
 
