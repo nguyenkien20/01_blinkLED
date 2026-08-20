@@ -17,33 +17,31 @@
  */
 
 #include <stdint.h>
+#include "stm32f411retx.h"
 
 int main(void)
 {
-	uint32_t *pClock = (uint32_t *) 0x40023830;
-	uint32_t *pMode = (uint32_t *) 0x40020000;
-	uint32_t *pOutput_data = (uint32_t *) 0x40020014;
 
 	//1. enable the clock for GPIOA in AHB1ENR
-	// no la vi tri bit thu
-	*pClock |= 0x01;
+	// no la vi tri bit thu 1
+	RCC_AHB1ENR |= (1<<0);
 
 	//2. configure GPIOA mode as output
 	//a, clear 11 and 10 pin to 0
-	*pMode &= ~(1<<10);
-	*pMode &= ~(1<<11);
+	GPIOA_MODER &= ~(1<<10);
+	GPIOA_MODER &= ~(1<<11);
 	//b, set 10 to 1
-	*pMode |= (1<<10);
+	GPIOA_MODER |= (1<<10);
 	//3. Set PA5 pin to output data register to make i/o pin 5 -> HIGH = set 5 to 1
 
 	// turn on and off between 0.56s
 	// t = (so vong lap + so cycle/vong) + CPU (Hz)
 	while(1){
-	*pOutput_data |= (1<<5); // turn on led
+	GPIOA_ODR |= (1<<5); // turn on led
 	// this loop excute 10.000 times
 	for(uint32_t i = 0; i < 600000; i++);
 
-	*pOutput_data &= ~(1<<5); // turn off led
+	GPIOA_ODR &= ~(1<<5); // turn off led
 
 	for(uint32_t i = 0; i < 600000; i++);
 	// khi dung vong lap nay, cpu se bi chiem dung bo nho
